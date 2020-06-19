@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def simulate(rng, N, mu, sigma, lam, y_dist):
+def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
     phi1 = math.sqrt(mu ** 2 / sigma ** 4 + 2 * lam / sigma ** 2) - mu / sigma ** 2
     phi2 = math.sqrt(mu ** 2 / sigma ** 4 + 2 * lam / sigma ** 2) + mu / sigma ** 2
 
@@ -34,14 +34,16 @@ def simulate(rng, N, mu, sigma, lam, y_dist):
         a[i] = p[i] + y[i]
         m[i] = max(m[i - 1], a[i - 1] + v[i], a[i])
 
-    return t, p, a, m
+        if m[i] > limit: break
+
+    return i, t, p, a, m
 
 
 if __name__ == '__main__':
     rng = np.random.default_rng(3245)
 
     # %% Demo a single simulation
-    t, p, a, m = simulate(rng, 200, 0, 1, 1, lambda: rng.exponential(0.1))
+    _, t, p, a, m = simulate(rng, 200, 0, 1, 1, lambda: rng.exponential(0.1))
 
     # %% Display simulation
     plt.figure(1, clear=True)
@@ -60,7 +62,7 @@ if __name__ == '__main__':
     M = np.zeros((n, N))
 
     for i in range(n):
-        t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.normal(0, 1))
+        _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.normal(0, 1))
         T[i, :] = t
         P[i, :] = p
         A[i, :] = a
