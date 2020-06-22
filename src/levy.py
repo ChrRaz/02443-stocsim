@@ -1,8 +1,8 @@
-#!/usr/bin/python3
 import math
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as st
 
 
 def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
@@ -34,27 +34,28 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
         a[i] = p[i] + y[i]
         m[i] = max(m[i - 1], a[i - 1] + v[i], a[i])
 
-        if m[i] > limit: break
+        if m[i] > limit:
+            break
 
     return i, t, p, a, m
 
 
-if __name__ == '__main__':
-    rng = np.random.default_rng(3245)
+if __name__ == "__main__":
+    rng = np.random.default_rng()
 
     # %% Demo a single simulation
-    _, t, p, a, m = simulate(rng, 200, 0, 1, 1, lambda: rng.exponential(0.1))
+    _, t, p, a, m = simulate(rng, 1000, 1, 1, 1, lambda: rng.exponential(0.1))
 
     # %% Display simulation
-    plt.figure(1, clear=True)
-    plt.plot(t, a, drawstyle='steps-post')
-    plt.plot(t, p, 'o')
-    plt.plot(t, m, '--', drawstyle='steps-pre')
-    plt.legend(['$A_i$', '$P_i$', '$M_i$'])
-    plt.xlabel('$T_i$')
+    # plt.figure(1, clear=True)
+    # plt.plot(t, a, drawstyle="steps-post")
+    # plt.plot(t, p, "o")
+    # plt.plot(t, m, "--", drawstyle="steps-pre")
+    # plt.legend(["$A_i$", "$P_i$", "$M_i$"])
+    # plt.xlabel("$T_i$")
 
     # %% Simulate 100 realisations
-    n = 100
+    n = 20
     N = 1000
     T = np.zeros((n, N))
     P = np.zeros((n, N))
@@ -62,19 +63,40 @@ if __name__ == '__main__':
     M = np.zeros((n, N))
 
     for i in range(n):
-        _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.normal(0, 1))
+        # _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.normal(0, 1))
+        _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.exponential(0.1))
         T[i, :] = t
         P[i, :] = p
         A[i, :] = a
         M[i, :] = m
+    Tl = T[:, -1]
+    Pl = P[:, -1]
+    Al = A[:, -1]
+    Ml = M[:, -1]
 
     # %% Display simulation
+    plt.figure(1, clear=True)
+    plt.hist(Pl)
+    st.kstest(Pl, "norm")[1]
+    plt.title(
+        f"$P_{{{N}}}, p = {st.kstest((Pl-np.mean(Pl))/np.std(Pl), 'norm')[1]:.4}$"
+    )
     plt.figure(2, clear=True)
-    plt.hist(P[:, -1])
-    plt.title(f'$P_{{{N}}}$')
+    plt.hist(Tl)
+    plt.title(
+        f"$T_{{{N}}}, p = {st.kstest((Tl-np.mean(Tl))/np.std(Tl), 'norm')[1]:.4}$"
+    )
     plt.figure(3, clear=True)
-    plt.hist(A[:, -1])
-    plt.title(f'$A_{{{N}}}$')
+    plt.hist(Al)
+    plt.title(
+        f"$A_{{{N}}}, p = {st.kstest((Al-np.mean(Al))/np.std(Al), 'norm')[1]:.4}$"
+    )
     plt.figure(4, clear=True)
-    plt.hist(M[:, -1])
-    plt.title(f'$M_{{{N}}}$')
+    plt.hist(Ml)
+    plt.title(
+        f"$M_{{{N}}}, p = {st.kstest((Ml-np.mean(Ml))/np.std(Ml), 'norm')[1]:.4}$"
+    )
+    plt.figure(5, clear=True)
+    for i in range(n):
+        plt.plot(T[i, :], A[i, :])
+    plt.show()
