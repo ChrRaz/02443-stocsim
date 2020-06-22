@@ -40,10 +40,24 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
     return i, t, p, a, m
 
 
+def printSimulate(N, mu, sigma, lam, y_dist, n, limit=math.inf, seed=3017):
+    rng = np.random.default_rng(seed)
+    for i in range(n):
+        _, t, p, a, m = simulate(rng, N, mu, sigma, lam, y_dist)
+        T[i, :] = t
+        P[i, :] = p
+        A[i, :] = a
+        M[i, :] = m
+    plt.figure()
+    for i in range(n):
+        plt.plot(T[i, :], A[i, :])
+    plt.title(f"$\\mu = {mu}, \\sigma = {sigma}, \\lambda = {lam} $")
+
+
 if __name__ == "__main__":
-    rng = np.random.default_rng()
 
     # %% Demo a single simulation
+    rng = np.random.default_rng(3017)
     _, t, p, a, m = simulate(rng, 1000, 1, 1, 1, lambda: rng.exponential(0.1))
 
     # %% Display simulation
@@ -55,7 +69,8 @@ if __name__ == "__main__":
     # plt.xlabel("$T_i$")
 
     # %% Simulate 100 realisations
-    n = 20
+    rng = np.random.default_rng(3017)
+    n = 200
     N = 1000
     T = np.zeros((n, N))
     P = np.zeros((n, N))
@@ -96,7 +111,15 @@ if __name__ == "__main__":
     plt.title(
         f"$M_{{{N}}}, p = {st.kstest((Ml-np.mean(Ml))/np.std(Ml), 'norm')[1]:.4}$"
     )
-    plt.figure(5, clear=True)
-    for i in range(n):
-        plt.plot(T[i, :], A[i, :])
+    f = lambda: rng.exponential(0.1)
+    n = 20
+    N = 1000
+    printSimulate(N, 0, 1, 1, f, n)
+    printSimulate(N, -1, 1, 1, f, n)
+    printSimulate(N, 1, 1, 1, f, n)
+    printSimulate(N, 0, 0.1, 1, f, n)
+    printSimulate(N, 0, 10, 1, f, n)
+    printSimulate(N, 0, 1, 0.1, f, n)
+    printSimulate(N, 0, 1, 10, f, n)
+    printSimulate(N, -0.1, 1, 1, f, n)
     plt.show()
