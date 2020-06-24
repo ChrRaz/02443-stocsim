@@ -27,7 +27,7 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
         w[i] = rng.exponential(1 / phi2)
 
         # Step 2
-        y[i] = y_dist()
+        y[i] = y_dist(rng)
 
         # Step 3
         p[i] = a[i - 1] + (v[i] - w[i])
@@ -37,28 +37,56 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
         if m[i] > limit:
             break
 
-    return i, t, p, a, m
+    return i, t, p, a, m, v, w, y
 
 
-def printSimulate(N, mu, sigma, lam, y_dist, n, limit=math.inf, seed=3017):
+def printSimulate(
+    N, mu, sigma, lam, y_dist, n, limit=math.inf, seed=3017, start_string=""
+):
     rng = np.random.default_rng(seed)
+    T = np.zeros((n, N))
+    P = np.zeros((n, N))
+    A = np.zeros((n, N))
+    M = np.zeros((n, N))
+    W = np.zeros((n, N))
+    V = np.zeros((n, N))
+    Y = np.zeros((n, N))
+
     for i in range(n):
-        _, t, p, a, m = simulate(rng, N, mu, sigma, lam, y_dist)
+        _, t, p, a, m, v, w, y = simulate(rng, N, mu, sigma, lam, y_dist)
         T[i, :] = t
         P[i, :] = p
         A[i, :] = a
         M[i, :] = m
+        W[i, :] = w
+        V[i, :] = v
+        Y[i, :] = y
+    # plt.figure()
+    # for i in range(n):
+    #     plt.plot(T[i, :], V[i, :])
+    # plt.title(f"v of $\sigma$ = {sigma}")
+    # plt.figure()
+    # for i in range(n):
+    #     plt.plot(T[i, :], W[i, :])
+    # plt.title(f"w of $\sigma$ = {sigma}")
+    # plt.figure()
+    # for i in range(n):
+    #     plt.plot(T[i, :], Y[i, :])
+    # plt.title(f"Y of $\sigma$ = {sigma}")
     plt.figure()
     for i in range(n):
         plt.plot(T[i, :], A[i, :])
     plt.title(f"$\\mu = {mu}, \\sigma = {sigma}, \\lambda = {lam} $")
+    plt.savefig(f"{start_string}_{mu}_{sigma}_{lam}.eps")
 
 
 if __name__ == "__main__":
 
     # %% Demo a single simulation
     rng = np.random.default_rng(3017)
-    _, t, p, a, m = simulate(rng, 1000, 1, 1, 1, lambda: rng.exponential(0.1))
+    _, t, p, a, m, _, _, _ = simulate(
+        rng, 1000, 1, 1, 1, lambda rng: rng.exponential(0.1)
+    )
 
     # %% Display simulation
     # plt.figure(1, clear=True)
@@ -78,8 +106,10 @@ if __name__ == "__main__":
     M = np.zeros((n, N))
 
     for i in range(n):
-        # _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.normal(0, 1))
-        _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda: rng.exponential(0.1))
+        # _, t, p, a, m = simulate(rng, N, 0, 1, 1, lambda rng: rng.normal(0, 1))
+        _, t, p, a, m, _, _, _ = simulate(
+            rng, N, 0, 1, 1, lambda rng: rng.exponential(0.1)
+        )
         T[i, :] = t
         P[i, :] = p
         A[i, :] = a
@@ -111,15 +141,19 @@ if __name__ == "__main__":
     plt.title(
         f"$M_{{{N}}}, p = {st.kstest((Ml-np.mean(Ml))/np.std(Ml), 'norm')[1]:.4}$"
     )
-    f = lambda: rng.exponential(0.1)
+    f = lambda rng: rng.exponential(0.1)
+    f0 = lambda rng: rng.exponential(1) * 0
     n = 20
     N = 1000
-    printSimulate(N, 0, 1, 1, f, n)
-    printSimulate(N, -1, 1, 1, f, n)
-    printSimulate(N, 1, 1, 1, f, n)
-    printSimulate(N, 0, 0.1, 1, f, n)
-    printSimulate(N, 0, 10, 1, f, n)
-    printSimulate(N, 0, 1, 0.1, f, n)
-    printSimulate(N, 0, 1, 10, f, n)
-    printSimulate(N, -0.1, 1, 1, f, n)
+    ex3 = "secondproject/ex3"
+    printSimulate(N, 0, 1, 1, f, n, start_string=ex3)
+    printSimulate(N, -1, 1, 1, f, n, start_string=ex3)
+    printSimulate(N, 1, 1, 1, f, n, start_string=ex3)
+    printSimulate(N, 0, 0.1, 1, f, n, start_string=ex3)
+    printSimulate(N, 0, 10, 1, f, n, start_string=ex3)
+    printSimulate(N, 0, 1, 0.1, f, n, start_string=ex3)
+    printSimulate(N, 0, 1, 10, f, n, start_string=ex3)
+    printSimulate(N, -0.1, 1, 1, f, n, start_string=ex3)
+    printSimulate(N, -1, np.sqrt(10), 10, f, n, start_string=ex3)
+    printSimulate(N, -1, 1, 1, f0, n, start_string=ex3 + "y0")
     plt.show()
