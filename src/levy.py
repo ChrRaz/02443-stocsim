@@ -17,6 +17,7 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
     y = np.zeros(N)
     m = np.zeros(N)
 
+    i = 0
     for i in range(1, N):
         # Advance time
         dt = rng.exponential(1 / lam)
@@ -40,9 +41,7 @@ def simulate(rng, N, mu, sigma, lam, y_dist, limit=math.inf):
     return i, t, p, a, m, v, w, y
 
 
-def printSimulate(
-    N, mu, sigma, lam, y_dist, n, limit=math.inf, seed=3017, start_string=""
-):
+def printSimulate(N, mu, sigma, lam, y_dist, n, limit=math.inf, seed=3017, start_string=""):
     rng = np.random.default_rng(seed)
     T = np.zeros((n, N))
     P = np.zeros((n, N))
@@ -53,7 +52,7 @@ def printSimulate(
     Y = np.zeros((n, N))
 
     for i in range(n):
-        _, t, p, a, m, v, w, y = simulate(rng, N, mu, sigma, lam, y_dist)
+        _, t, p, a, m, v, w, y = simulate(rng, N, mu, sigma, lam, y_dist, limit)
         T[i, :] = t
         P[i, :] = p
         A[i, :] = a
@@ -122,7 +121,7 @@ if __name__ == "__main__":
     # %% Display simulation
     plt.figure(1, clear=True)
     plt.hist(Pl)
-    st.kstest(Pl, "norm")[1]
+    print(st.kstest(Pl, "norm"))
     plt.title(
         f"$P_{{{N}}}, p = {st.kstest((Pl-np.mean(Pl))/np.std(Pl), 'norm')[1]:.4}$"
     )
